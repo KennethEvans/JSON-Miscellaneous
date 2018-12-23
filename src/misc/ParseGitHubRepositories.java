@@ -73,12 +73,7 @@ public class ParseGitHubRepositories
             ex.printStackTrace();
             return;
         }
-        Message message = getMessage(json);
-        if(message != null) {
-            System.out
-                .println("listRepositories received:\n  " + message.message);
-            return;
-        }
+        if(!checkMessage(json, "listRepositories")) return;
         try {
             Gson gson = new Gson();
             Repro[] results = gson.fromJson(json, Repro[].class);
@@ -132,13 +127,8 @@ public class ParseGitHubRepositories
             ex.printStackTrace();
             return null;
         }
-        Message message = getMessage(json);
-        if(message == null) {
-            return gson.fromJson(json, Release[].class);
-        } else {
-            System.out.println("getRelease received:\n  " + message.message);
-            return null;
-        }
+        if(!checkMessage(json, "getRelease")) return null;
+        return gson.fromJson(json, Release[].class);
     }
 
     public static void listRelease(String repoName) {
@@ -207,6 +197,18 @@ public class ParseGitHubRepositories
             return null;
         }
         return message;
+    }
+
+    public static boolean checkMessage(String json, String caller) {
+        Message message = getMessage(json);
+        if(message != null) {
+            System.out.println(caller + " received:\n  " + message.message);
+            if(message.message.contains("API rate limit exceeded")) {
+                listRateLimit();
+            }
+            return false;
+        }
+        return true;
     }
 
     public static void listRateLimit() {
