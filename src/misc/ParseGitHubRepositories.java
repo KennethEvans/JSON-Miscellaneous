@@ -2,8 +2,13 @@ package misc;
 
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
+import java.io.File;
 import java.io.FileReader;
+import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -21,68 +26,17 @@ import com.google.gson.Gson;
  * By Kenneth Evans, Jr.
  */
 
-class Repro
-{
-    int id;
-    String full_name;
-    String name;
-    String description;
-    String created_at;
-    String updated_at;
-    String pushed_at;
-    String language;
-    String has_downloads;
-    License license;
-    int size;
-}
-
-class License
-{
-    String name;
-}
-
-class Release
-{
-    String name;
-    String tag_name;
-    String created_at;
-    String published_at;
-    String body;
-}
-
-class Message
-{
-    String message;
-}
-
-class Readme
-{
-    String path;
-}
-
-class RateLimit
-{
-    Rate rate;
-}
-
-class Rate
-{
-    int limit;
-    int remaining;
-    int reset;
-}
-
 public class ParseGitHubRepositories
 {
+    public static final String LS = System.getProperty("line.separator");
+    public static final String COMMA = ",";
+
     private static final String DEFAULT_OWNER = "KennethEvans";
     private static final String DEFAULT_IN_FILE = "C:/Scratch/AAA/github-repos-2018-12-22.json";
     private static final String inFile = DEFAULT_IN_FILE;
-
-    private static final boolean USE_PASSWORD = true;
-    private static final boolean GET_RELEASES = USE_PASSWORD ? true : false;
-    private static final boolean GET_README = USE_PASSWORD ? true : false;
     private static String owner = DEFAULT_OWNER;
 
+    private static final boolean USE_PASSWORD = true;
     /**
      * Note that user is the different from owner, even though they may
      * typically be the same. User is used for logging in. Owner is the owner of
@@ -92,7 +46,24 @@ public class ParseGitHubRepositories
     private static char[] password = "".toCharArray();
     private static boolean havePassword = false;
 
+    private static final boolean GET_RELEASES = USE_PASSWORD ? true : false;
+    private static final boolean GET_README = USE_PASSWORD ? true : false;
+
+    private static boolean CREATE_SPREADSHEET = true;
+    private static final String SPREADSHEET_DIR = "C:/Scratch/Git/GitHub/Repository Information/";
+    private static final String CVS_FILENAME_TEMPLATE = SPREADSHEET_DIR
+        + "RepositoryInfo-%s.csv";
+
+    public static final String format = "yyyy-MM-dd-hh-mm";
+    public static final SimpleDateFormat formatter = new SimpleDateFormat(
+        format);
+
     public static void listRepositories() {
+        List<SpreadsheetRow> rows = null;
+        SpreadsheetRow row = null;
+        if(CREATE_SPREADSHEET) {
+            rows = new ArrayList<SpreadsheetRow>();
+        }
         String json = null;
         String cmd = generateCurlCommand(generateReproCommand());
         try {
@@ -106,9 +77,14 @@ public class ParseGitHubRepositories
             Gson gson = new Gson();
             Repro[] results = gson.fromJson(json, Repro[].class);
             Release[] releases = null;
-            ;
             Readme readme = null;
+            int releaseCount = 0;
+            String readmeName = null;
             for(Repro repro : results) {
+                readme = null;
+                releases = null;
+                releaseCount = 0;
+                readmeName = "";
                 System.out.println(repro.full_name);
                 System.out.println("    name=" + repro.name);
                 System.out.println("    description=" + repro.description);
@@ -128,8 +104,10 @@ public class ParseGitHubRepositories
                     readme = getReadme(repro.name);
                     if(readme == null) {
                         System.out.println("    No readme");
+                        readmeName = "";
                     } else {
                         System.out.println("    readme=" + readme.path);
+                        readmeName = readme.path;
                     }
                 }
                 if(GET_RELEASES) {
@@ -137,6 +115,7 @@ public class ParseGitHubRepositories
                     if(releases == null || releases.length == 0) {
                         System.out.println("    No releases");
                     } else {
+                        releaseCount = releases.length;
                         System.out.println("    Releases");
                         for(Release release : releases) {
                             System.out.println("      " + release.name);
@@ -151,8 +130,42 @@ public class ParseGitHubRepositories
                         }
                     }
                 }
+                if(CREATE_SPREADSHEET) {
+                    // Fill in spreadsheet row;
+                    row = new SpreadsheetRow();
+                    rows.add(row);
+                    row.name = repro.name;
+                    if(repro.description == null) {
+                        row.description = "";
+                    } else {
+                        row.description = repro.description;
+                    }
+                    row.readme = readmeName;
+                    row.created_at = repro.created_at;
+                    row.updated_at = repro.updated_at;
+                    row.pushed_at = repro.pushed_at;
+                    if(repro.language == null) {
+                        row.language = "";
+                    } else {
+                        row.language = repro.language;
+                    }
+                    if(repro.license == null) {
+                        row.license = "";
+                    } else {
+                        row.license = repro.license.name;
+                    }
+                    row.size = Integer.toString(repro.size);
+                    if(releaseCount == 0) {
+                        row.releases = "";
+                    } else {
+                        row.releases = Integer.toString(releaseCount);
+                    }
+                }
             }
-
+            if(CREATE_SPREADSHEET) {
+                // Create spreadsheet
+                writeCSV(rows);
+            }
         } catch(Exception ex) {
             ex.printStackTrace();
         }
@@ -328,6 +341,55 @@ public class ParseGitHubRepositories
         return true;
     }
 
+    private static void writeCSV(List<SpreadsheetRow> rows) {
+        String fileName = String.format(CVS_FILENAME_TEMPLATE,
+            formatter.format(new Date()));
+        File file = new File(fileName);
+        if(file.exists()) {
+            int selection = JOptionPane.showConfirmDialog(null,
+                "File already exists:" + LS + file.getPath()
+                    + "\nOK to replace?",
+                "Warning", JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+            if(selection != JOptionPane.OK_OPTION) return;
+        }
+        PrintWriter writer = null;
+        try {
+            writer = new PrintWriter(file);
+            // Headings
+            String[] headings = SpreadsheetRow.CVS_HEADINGS;
+            for(String heading : headings) {
+                writer.print(heading + COMMA);
+            }
+            writer.println();
+            for(SpreadsheetRow row : rows) {
+                writer.print(row.name + COMMA);
+                writer.print("\"" + row.description + "\"" + COMMA);
+                writer.print(row.language + COMMA);
+                writer.print(row.releases + COMMA);
+                writer.print(row.readme + COMMA);
+                writer.print(row.license + COMMA);
+                writer.print(row.created_at + COMMA);
+                writer.print(row.updated_at + COMMA);
+                writer.print(row.pushed_at + COMMA);
+                writer.print(row.size + COMMA);
+                writer.println();
+            }
+        } catch(Exception ex) {
+            ex.printStackTrace();
+            return;
+        } finally {
+            if(writer != null) {
+                writer.flush();
+                writer.close();
+            }
+        }
+        System.out.println();
+        System.out.println("Wrote " + file.getPath());
+        System.out.println(
+            "    [LibreOffice: Use \"Format quoted field as text with String delimiter=\"]");
+    }
+
     /**
      * Read from a previously-generated file rather than using cURL to access
      * the GitHub API>
@@ -385,4 +447,74 @@ public class ParseGitHubRepositories
         System.out.println();
         System.out.println("All Done");
     }
+}
+
+class SpreadsheetRow
+{
+    public static final String[] CVS_HEADINGS = {"name", "description",
+        "language", "releases", "readme", "license", "created_at", "updated_at",
+        "pushed_at", "size"};
+    String name;
+    String description;
+    String language;
+    String releases;
+    String readme;
+    String license;
+    String created_at;
+    String updated_at;
+    String pushed_at;
+    String size;
+}
+
+///////////////// Classes used for deserialization
+
+class Repro
+{
+    int id;
+    String full_name;
+    String name;
+    String description;
+    String created_at;
+    String updated_at;
+    String pushed_at;
+    String language;
+    String has_downloads;
+    License license;
+    int size;
+}
+
+class License
+{
+    String name;
+}
+
+class Release
+{
+    String name;
+    String tag_name;
+    String created_at;
+    String published_at;
+    String body;
+}
+
+class Message
+{
+    String message;
+}
+
+class Readme
+{
+    String path;
+}
+
+class RateLimit
+{
+    Rate rate;
+}
+
+class Rate
+{
+    int limit;
+    int remaining;
+    int reset;
 }
