@@ -5,10 +5,12 @@ import java.awt.GridLayout;
 import java.io.File;
 import java.io.FileReader;
 import java.io.PrintWriter;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -54,9 +56,9 @@ public class ParseGitHubRepositories
     private static final String CVS_FILENAME_TEMPLATE = SPREADSHEET_DIR
         + "RepositoryInfo-%s.csv";
 
-    public static final String format = "yyyy-MM-dd-hh-mm";
-    public static final SimpleDateFormat formatter = new SimpleDateFormat(
-        format);
+    public static final String csvFileFormat = "yyyy-MM-dd-hh-mm";
+    public static final SimpleDateFormat csvFileFormatter = new SimpleDateFormat(
+        csvFileFormat);
 
     public static void listRepositories() {
         List<SpreadsheetRow> rows = null;
@@ -96,9 +98,15 @@ public class ParseGitHubRepositories
                 } else {
                     System.out.println("    license=");
                 }
-                System.out.println("    created_at=" + repro.created_at);
-                System.out.println("    updated_at=" + repro.updated_at);
-                System.out.println("    pushed_at=" + repro.pushed_at);
+                System.out.println("    created_at=" + repro.created_at + "  ("
+                    + SpreadsheetRow.convertToLocal(repro.created_at)
+                    + " local)");
+                System.out.println("    updated_at=" + repro.updated_at + "  ("
+                    + SpreadsheetRow.convertToLocal(repro.updated_at)
+                    + " local)");
+                System.out.println("    pushed_at=" + repro.pushed_at + "  ("
+                    + SpreadsheetRow.convertToLocal(repro.pushed_at)
+                    + " local)");
                 System.out.println("    size=" + repro.size);
                 if(GET_README) {
                     readme = getReadme(repro.name);
@@ -141,9 +149,12 @@ public class ParseGitHubRepositories
                         row.description = repro.description;
                     }
                     row.readme = readmeName;
-                    row.created_at = repro.created_at;
-                    row.updated_at = repro.updated_at;
-                    row.pushed_at = repro.pushed_at;
+                    row.created_at = SpreadsheetRow
+                        .convertToLocal(repro.created_at);
+                    row.updated_at = SpreadsheetRow
+                        .convertToLocal(repro.updated_at);
+                    row.pushed_at = SpreadsheetRow
+                        .convertToLocal(repro.pushed_at);
                     if(repro.language == null) {
                         row.language = "";
                     } else {
@@ -343,7 +354,7 @@ public class ParseGitHubRepositories
 
     private static void writeCSV(List<SpreadsheetRow> rows) {
         String fileName = String.format(CVS_FILENAME_TEMPLATE,
-            formatter.format(new Date()));
+            csvFileFormatter.format(new Date()));
         File file = new File(fileName);
         if(file.exists()) {
             int selection = JOptionPane.showConfirmDialog(null,
@@ -454,6 +465,11 @@ class SpreadsheetRow
     public static final String[] CVS_HEADINGS = {"name", "description",
         "language", "releases", "readme", "license", "created_at", "updated_at",
         "pushed_at", "size"};
+    public static final DateFormat formatParse = new SimpleDateFormat(
+        "yyyy-MM-dd'T'HH:mm:ssX", Locale.US);
+    public static final DateFormat formatWrite = new SimpleDateFormat(
+        "yyyy-MM-dd HH:mm:ss", Locale.US);
+
     String name;
     String description;
     String language;
@@ -464,6 +480,15 @@ class SpreadsheetRow
     String updated_at;
     String pushed_at;
     String size;
+
+    public static String convertToLocal(String time) {
+        try {
+            Date date = formatParse.parse(time);
+            return formatWrite.format(date);
+        } catch(Exception ex) {
+            return "Invalid";
+        }
+    }
 }
 
 ///////////////// Classes used for deserialization
