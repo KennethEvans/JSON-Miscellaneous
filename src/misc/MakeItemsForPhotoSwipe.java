@@ -4,6 +4,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.imageio.ImageIO;
@@ -21,8 +23,10 @@ public class MakeItemsForPhotoSwipe
     public static final String LS = System.getProperty("line.separator");
     private static final String[] IMAGE_FILE_EXTENSIONS = new String[] {"jpg",
         "jpeg", "png", "gif"};
-   /** Directory from which the script is being run. */
-    private static final String DEFAULT_PARENT_DIR = "C:/Scratch/AAA/Image Gallery Test/Test Site/gallery";
+    /** Directory from which the script is being run. */
+    private static final String DEFAULT_PARENT_DIR = "C:/Users/evans/Documents/Web Pages/kenevans.net/Digital Art";
+    // private static final String DEFAULT_PARENT_DIR = "C:/Scratch/AAA/Image
+    // Gallery Test/Test Site/gallery";
     /** Directory where the images are. */
     private static final String DEFAULT_DIR = DEFAULT_PARENT_DIR + "/images";
 
@@ -30,6 +34,8 @@ public class MakeItemsForPhotoSwipe
         List<Item> items = new ArrayList<Item>();
         File dir = new File(DEFAULT_DIR);
         File[] files = dir.listFiles();
+        Arrays.sort(files,
+            Comparator.comparingLong(File::lastModified).reversed());
         BufferedImage bi;
         int width, height;
         Item item;
@@ -70,7 +76,9 @@ public class MakeItemsForPhotoSwipe
     }
 
     public static void main(String[] args) {
-        try {
+        System.out.println("Processing: " + DEFAULT_DIR);
+        System.out.println();
+               try {
             System.out.println(getItems());
         } catch(Exception ex) {
             ex.printStackTrace();
