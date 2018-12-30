@@ -29,6 +29,11 @@ public class MakeItemsForPhotoSwipe
     // Gallery Test/Test Site/gallery";
     /** Directory where the images are. */
     private static final String DEFAULT_DIR = DEFAULT_PARENT_DIR + "/images";
+    private static final String DEFAULT_RESCALE_EXT = ".jpg";
+    private static final String DEFAULT_RESCALE_SUFFIX = "_M";
+    /** Directory from which the script is being run. */
+    private static final String RESCALE_SUFFIX = DEFAULT_RESCALE_SUFFIX
+        + DEFAULT_RESCALE_EXT;
 
     private static String getItems() throws IOException {
         List<Item> items = new ArrayList<Item>();
@@ -45,6 +50,8 @@ public class MakeItemsForPhotoSwipe
         for(File file : files) {
             skip = true;
             if(file.isDirectory()) continue;
+            // Don't do thumbnails
+            if(file.getName().endsWith(RESCALE_SUFFIX)) continue;
             for(String ext : IMAGE_FILE_EXTENSIONS) {
                 if(file.getName().toLowerCase().endsWith(ext)) {
                     skip = false;
@@ -78,7 +85,7 @@ public class MakeItemsForPhotoSwipe
     public static void main(String[] args) {
         System.out.println("Processing: " + DEFAULT_DIR);
         System.out.println();
-               try {
+        try {
             System.out.println(getItems());
         } catch(Exception ex) {
             ex.printStackTrace();
