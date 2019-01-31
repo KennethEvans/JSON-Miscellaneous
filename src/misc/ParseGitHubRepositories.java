@@ -408,10 +408,10 @@ public class ParseGitHubRepositories
      * @param fileName File with JSON from a repositories request.
      */
     public static void readFile(String fileName) {
-        System.out.println(inFile);
+        System.out.println(fileName);
         try {
             Gson gson = new Gson();
-            Repro[] results = gson.fromJson(new FileReader(DEFAULT_IN_FILE),
+            Repro[] results = gson.fromJson(new FileReader(fileName),
                 Repro[].class);
             for(Repro repro : results) {
                 System.out.println(repro.full_name);
