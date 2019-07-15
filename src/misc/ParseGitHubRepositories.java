@@ -34,8 +34,8 @@ public class ParseGitHubRepositories
     public static final String COMMA = ",";
 
     private static final String DEFAULT_OWNER = "KennethEvans";
-    private static final String DEFAULT_IN_FILE = "C:/Scratch/AAA/github-repos-2018-12-22.json";
-    private static final String inFile = DEFAULT_IN_FILE;
+//    private static final String DEFAULT_IN_FILE = "C:/Scratch/AAA/github-repos-2018-12-22.json";
+//    private static final String inFile = DEFAULT_IN_FILE;
     private static String owner = DEFAULT_OWNER;
 
     private static final boolean USE_PASSWORD = true;
