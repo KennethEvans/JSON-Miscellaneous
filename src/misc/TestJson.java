@@ -17,7 +17,7 @@ import com.google.gson.stream.JsonWriter;
 
 public class TestJson
 {
-//    private static String DEFAULT_IN_FILE = "C:/Users/evans/Documents/DAZ 3D/Studio4/Studio 4 Content/data/DAZ 3D/Genesis/Base/Morphs/Kenneth Evans/KE Test/CloneVictoria4.KE.dsf";
+//    private static String DEFAULT_IN_FILE = "C:/Users/evans/Documents/DAZ 3D/Studio4/Studio 4 Content/weights/DAZ 3D/Genesis/Base/Morphs/Kenneth Evans/KE Test/CloneVictoria4.KE.dsf";
     private static String DEFAULT_IN_FILE = "C:/Scratch/AAA/github-repos-2018-12-22.json";
     public static void read(String fileName) {
         try {
