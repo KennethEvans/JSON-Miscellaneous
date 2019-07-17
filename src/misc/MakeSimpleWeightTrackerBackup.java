@@ -31,7 +31,7 @@ import com.google.gson.Gson;
 public class MakeSimpleWeightTrackerBackup
 {
     private static final String INPUT_DIR = "C:/Scratch/Weight Charts/Simple Weight Tracker";
-    private static final String INPUT_FILE_NAME_PREFIX = "SWT_Calc_Data_07_16_2019";
+    private static final String INPUT_FILE_NAME_PREFIX = "SWT_Calc_Data_07_17_2019";
 
     private static String parseFile(String fileName) {
         Settings settings = new Settings();
@@ -59,7 +59,7 @@ public class MakeSimpleWeightTrackerBackup
         }
 
         // The data in Weight Chart.ods are sorted with latest first
-        Collections.reverse(data);
+        // Collections.reverse(data);
 
         Gson gson = new Gson();
         return gson.toJson(settings);
