@@ -34,8 +34,9 @@ public class ParseGitHubRepositories
     public static final String COMMA = ",";
 
     private static final String DEFAULT_OWNER = "KennethEvans";
-//    private static final String DEFAULT_IN_FILE = "C:/Scratch/AAA/github-repos-2018-12-22.json";
-//    private static final String inFile = DEFAULT_IN_FILE;
+    // private static final String DEFAULT_IN_FILE =
+    // "C:/Scratch/AAA/github-repos-2018-12-22.json";
+    // private static final String inFile = DEFAULT_IN_FILE;
     private static String owner = DEFAULT_OWNER;
 
     private static final boolean USE_PASSWORD = true;
@@ -271,20 +272,25 @@ public class ParseGitHubRepositories
     }
 
     public static String generateCurlCommand(String arg) {
+        String cmd = null;
         if(USE_PASSWORD) {
             if(!havePassword) {
                 if(!getPassword()) {
-                    return "curl " + arg;
+                    cmd = "curl " + arg;
                 } else {
-                    return "curl -u \"" + String.valueOf(userName) + ":"
+                    cmd = "curl -H \"Authorization: token "
                         + String.valueOf(password) + "\" " + arg;
                 }
             } else {
-                return "curl -u \"" + String.valueOf(userName) + ":"
+                cmd = "curl -H \"Authorization: token "
                     + String.valueOf(password) + "\" " + arg;
             }
+        } else {
+            cmd = "curl " + arg;
         }
-        return "curl " + arg;
+        // DEBUG
+        // System.out.println(cmd);
+        return cmd;
     }
 
     public static boolean getPassword() {
@@ -292,7 +298,7 @@ public class ParseGitHubRepositories
 
         JPanel label = new JPanel(new GridLayout(0, 1, 2, 2));
         label.add(new JLabel("Username", SwingConstants.RIGHT));
-        label.add(new JLabel("Password", SwingConstants.RIGHT));
+        label.add(new JLabel("Access Token", SwingConstants.RIGHT));
         panel.add(label, BorderLayout.WEST);
 
         JPanel controls = new JPanel(new GridLayout(0, 1, 2, 2));
@@ -303,7 +309,7 @@ public class ParseGitHubRepositories
         controls.add(passwordField);
         panel.add(controls, BorderLayout.CENTER);
 
-        int option = JOptionPane.showConfirmDialog(null, panel, "Login",
+        int option = JOptionPane.showConfirmDialog(null, panel, "Authorization",
             JOptionPane.OK_CANCEL_OPTION);
         if(option == JOptionPane.OK_OPTION) {
             password = passwordField.getPassword();
