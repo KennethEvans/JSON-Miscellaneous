@@ -464,7 +464,7 @@ class SpreadsheetRow
 {
     public static final String[] CVS_HEADINGS = {"name", "description",
         "language", "releases", "readme", "license", "created_at", "updated_at",
-        "pushed_at", "size"};
+        "pushed_at", "size (KB)"};
     public static final DateFormat formatParse = new SimpleDateFormat(
         "yyyy-MM-dd'T'HH:mm:ssX", Locale.US);
     public static final DateFormat formatWrite = new SimpleDateFormat(
