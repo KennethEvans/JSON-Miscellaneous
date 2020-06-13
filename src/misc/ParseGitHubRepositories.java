@@ -174,6 +174,8 @@ public class ParseGitHubRepositories
                     }
                 }
             }
+            System.out.println();
+            System.out.println("Number of repositories: " + results.length);
             if(CREATE_SPREADSHEET) {
                 // Create spreadsheet
                 writeCSV(rows);
@@ -254,17 +256,23 @@ public class ParseGitHubRepositories
     }
 
     public static String generateReproCommand() {
-        return "https://api.github.com/users/" + owner + "/repos?per_page=1000";
+        // This command does not get private repos
+        // String cmd = "https://api.github.com/users/" + owner
+        // + "/repos?per_page=1000";
+        String cmd = "https://api.github.com/user" + "/repos?per_page=1000";
+        return cmd;
     }
 
     public static String generateReleaseCommand(String repoName) {
-        return "https://api.github.com/repos/" + owner + "/" + repoName
+        String cmd = "https://api.github.com/repos/" + owner + "/" + repoName
             + "/releases?per_page=1000";
+        return cmd;
     }
 
     public static String generateReadmeCommand(String repoName) {
-        return "https://api.github.com/repos/" + owner + "/" + repoName
+        String cmd = "https://api.github.com/repos/" + owner + "/" + repoName
             + "/readme?per_page=1000";
+        return cmd;
     }
 
     public static String generateRateLimitCommand() {
@@ -303,7 +311,7 @@ public class ParseGitHubRepositories
 
         JPanel controls = new JPanel(new GridLayout(0, 1, 2, 2));
         JTextField usernameField = new JTextField();
-        usernameField.setText(DEFAULT_OWNER);
+        usernameField.setText(String.valueOf(userName));
         controls.add(usernameField);
         JPasswordField passwordField = new JPasswordField();
         controls.add(passwordField);
@@ -321,6 +329,10 @@ public class ParseGitHubRepositories
     }
 
     public static String execCmd(String cmd) throws java.io.IOException {
+        if(cmd == null) {
+            System.out.println("Failed to get command");
+            return null;
+        }
         Process proc = Runtime.getRuntime().exec(cmd);
         java.io.InputStream is = proc.getInputStream();
         java.util.Scanner scanner = new java.util.Scanner(is);
@@ -456,6 +468,14 @@ public class ParseGitHubRepositories
         }
 
         System.out.println(new Date());
+        if(USE_PASSWORD) {
+            if(!getPassword()) {
+                System.out.println("Failed to get password");
+                System.out.println();
+                System.out.println("Aborted");
+                return;
+            }
+        }
         // listRateLimit(); // Use to check when rate will reset
         listRepositories();
         // listRelease("VS-ArtPad");
